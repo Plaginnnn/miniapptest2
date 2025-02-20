@@ -1,14 +1,8 @@
 'use client';
 
-import { FC, useEffect } from 'react';
-import { fixIosViewport } from '@/utils/fixIosViewport';
 import { Header } from '@/components/common/Header';
 
-const Home: FC = () => {
-  useEffect(() => {
-    fixIosViewport();
-  }, []);
-
+export default function Home() {
   return (
     <>
       <Header />
@@ -17,6 +11,4 @@ const Home: FC = () => {
       </main>
     </>
   );
-};
-
-export default Home;
+}

@@ -2,29 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --tg-viewport-height: 100vh;
-}
-
 body {
   background: var(--tg-theme-secondary-bg-color, white);
-  height: var(--tg-viewport-height);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-}
-
-.app-container {
-  height: var(--tg-viewport-height);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
 }
