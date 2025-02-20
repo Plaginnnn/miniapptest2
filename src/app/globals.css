@@ -1,0 +1,31 @@
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.animate-loading-bar {
+  animation: loading 1.5s infinite ease-in-out;
+}
+
+.pagination-custom .MuiPaginationItem-root {
+  color: var(--tg-theme-text-color);
+  background-color: var(--tg-theme-secondary-bg-color);
+  min-width: 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  font-size: 14px;
+}
+
+.pagination-custom .MuiPaginationItem-root.Mui-selected {
+  background-color: var(--tg-theme-button-color) !important;
+  color: var(--tg-theme-button-text-color) !important;
+}
+
+.pagination-custom .MuiPaginationItem-root:hover {
+  opacity: 0.8;
+}
