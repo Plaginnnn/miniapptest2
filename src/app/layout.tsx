@@ -18,6 +18,16 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: 'Your Application Title Goes Here',
   description: 'Your application description goes here',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
+  other: {
+    'apple-mobile-web-app-capable': 'yes'
+  }
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
