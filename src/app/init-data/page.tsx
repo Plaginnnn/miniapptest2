@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useSignal, initData, type User } from '@telegram-apps/sdk-react';
 import { List, Placeholder } from '@telegram-apps/telegram-ui';
+import Image from 'next/image';
 
 import {
   DisplayData,
@@ -90,7 +91,7 @@ export default function InitDataPage() {
       { title: 'username', value: username },
       { title: 'photo_url', value: photoUrl },
     ];
-  }, [initData]);
+  }, [initDataState]);
 
   if (!initDataRows) {
     return (
@@ -99,10 +100,13 @@ export default function InitDataPage() {
           header="Oops"
           description="Application was launched with missing init data"
         >
-          <img
+          <Image
             alt="Telegram sticker"
             src="https://xelene.me/telegram.gif"
-            style={{ display: 'block', width: '144px', height: '144px' }}
+            width={144}
+            height={144}
+            style={{ display: 'block' }}
+            unoptimized
           />
         </Placeholder>
       </Page>

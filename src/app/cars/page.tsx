@@ -10,43 +10,7 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
-
-// Дублируем необходимые типы
-export enum TransmissionType {
-  MANUAL = 'MANUAL',
-  AUTOMATIC = 'AUTOMATIC',
-  ROBOT = 'ROBOT',
-  CVT = 'CVT',
-  NONE = 'NONE'
-}
-
-export enum RestrictionType {
-  BAILIFF = 'BAILIFF',
-  PLEDGE = 'PLEDGE',
-  TRIBUNAL = 'TRIBUNAL',
-  NONE = 'NONE'
-}
-
-interface Car {
-  id: string;
-  brand: string;
-  model: string;
-  registrationNumber: string;
-  vinNumber: string;
-  transmissionType: TransmissionType;
-  restrictionType: RestrictionType;
-  currentPrice: number;
-  year: number;
-  photos: string[];
-  enginePower: number;
-  engineVolume: number;
-  ownerCount: number;
-  retailPrice: number;
-  minimalPrice: number;
-  bitDate: string;
-  additionalInfo: string[];
-  problemInfo: string[];
-}
+import { Car, TransmissionType, RestrictionType } from '@/types/car';
 
 // Временные тестовые данные
 const mockCars: Car[] = [
