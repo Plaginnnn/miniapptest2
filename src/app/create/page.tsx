@@ -863,38 +863,72 @@ export default function CreatePage() {
                   )}
                   {formData.photos.length < 10 && (
                     <div className={`${formData.photos.length > 0 ? 'mb-6' : 'mb-2'}`}>
-                      <label className="block w-full">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          capture="environment"
-                          className="hidden"
-                          onChange={async (e) => {
-                            try {
-                              if (!e.target.files || e.target.files.length === 0) {
-                                console.log('No files selected');
-                                return;
-                              }
+                      <FileInput
+                        accept="image/*"
+                        multiple
+                        label="Выбрать фото"
+                        onChange={async (e) => {
+                          try {
+                            const files = Array.from(e.target.files || []);
 
-                              const files = Array.from(e.target.files);
-                              console.log('Files selected:', files.length);
-
-                              // Остальной код обработки файлов остается тем же
-                              // ...
-                            } catch (error) {
-                              console.error('Error processing files:', error);
-                              setErrors(prev => ({
-                                ...prev,
-                                photos: 'Ошибка при обработке файлов'
-                              }));
+                            // Проверяем общее количество файлов
+                            if (files.length + formData.photos.length > 10) {
+                              setErrors({
+                                ...errors,
+                                photos: 'Достигнут лимит в 10 фотографий'
+                              });
+                              return;
                             }
-                          }}
-                        />
-                        <div className="w-full px-4 py-3.5 bg-[#3390EC] text-white rounded-2xl text-center cursor-pointer">
-                          Выбрать фото
-                        </div>
-                      </label>
+
+                            // Проверяем размер каждого файла
+                            const oversizedFiles = files.filter(file => file.size > 10 * 1024 * 1024);
+                            if (oversizedFiles.length > 0) {
+                              setErrors({
+                                ...errors,
+                                photos: 'Размер каждого файла не должен превышать 10MB'
+                              });
+                              return;
+                            }
+
+                            // Проверяем каждый файл
+                            const validationPromises = files.map(processImageFile);
+                            const validationResults = await Promise.all(validationPromises);
+
+                            const validFiles = files.filter((_, index) => validationResults[index]);
+
+                            if (validFiles.length !== files.length) {
+                              setErrors({
+                                ...errors,
+                                photos: 'Некоторые файлы не являются допустимыми изображениями'
+                              });
+                              // Добавляем только валидные файлы
+                              if (validFiles.length > 0) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  photos: [...prev.photos, ...validFiles]
+                                }));
+                              }
+                              return;
+                            }
+
+                            // Все файлы прошли проверку
+                            setFormData(prev => ({
+                              ...prev,
+                              photos: [...prev.photos, ...validFiles]
+                            }));
+
+                            if (errors.photos) {
+                              setErrors(prev => ({ ...prev, photos: undefined }));
+                            }
+                          } catch (error) {
+                            console.error('Error processing files:', error);
+                            setErrors(prev => ({
+                              ...prev,
+                              photos: 'Ошибка при обработке файлов'
+                            }));
+                          }
+                        }}
+                      />
                     </div>
                   )}
                 </div>
