@@ -8,14 +8,20 @@ export const Header: FC = () => {
   const pathname = usePathname();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-[var(--tg-theme-bg-color)]">
       {/* Navigation */}
-      <div className="w-full">
-        <SegmentedControl className="h-12 [&>*]:transition-all [&>*]:duration-300 [&>*]:ease-in-out">
+      <div className="w-full bg-[var(--tg-theme-bg-color)]">
+        <SegmentedControl
+          className="h-12 [&>*]:transition-all [&>*]:duration-300 [&>*]:ease-in-out bg-[var(--tg-theme-bg-color)]"
+          style={{
+            '--tg-segment-control-bg': 'var(--tg-theme-bg-color)',
+            '--tg-segment-control-active-bg': 'var(--tg-theme-secondary-bg-color)'
+          } as React.CSSProperties}
+        >
           <SegmentedControl.Item
             selected={pathname === '/cars'}
             onClick={() => router.push('/cars')}
-            className="transition-transform duration-300 ease-in-out"
+            className="transition-transform duration-300 ease-in-out bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)]"
           >
             <div className="flex items-center justify-center gap-1">
               <div className="flex-shrink-0 transition-transform duration-300 ease-in-out">
@@ -28,7 +34,7 @@ export const Header: FC = () => {
           <SegmentedControl.Item
             selected={pathname === '/booking'}
             onClick={() => router.push('/booking')}
-            className="transition-transform duration-300 ease-in-out"
+            className="transition-transform duration-300 ease-in-out bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)]"
           >
             <div className="flex items-center justify-center gap-1">
               <div className="flex-shrink-0 transition-transform duration-300 ease-in-out">
@@ -41,7 +47,7 @@ export const Header: FC = () => {
           <SegmentedControl.Item
             selected={pathname === '/create'}
             onClick={() => router.push('/create')}
-            className="transition-transform duration-300 ease-in-out"
+            className="transition-transform duration-300 ease-in-out bg-[var(--tg-theme-secondary-bg-color)] text-[var(--tg-theme-text-color)]"
           >
             <div className="flex items-center justify-center gap-1">
               <div className="flex-shrink-0 transition-transform duration-300 ease-in-out">

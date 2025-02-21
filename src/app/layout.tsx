@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en" className={poppins.variable}>
-      <body style={{ margin: 0, padding: 0 }}>
+      <body style={{ margin: 0, padding: 0, paddingBottom: '60px' }}>
         <Root>
           {children}
         </Root>

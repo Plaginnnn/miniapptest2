@@ -24,6 +24,7 @@ import {
   RestrictionType,
   RestrictionTypeLabels
 } from '@/types/car';
+import { Footer } from '@/components/common/Footer';
 
 interface CarFormData {
   brand: string;
@@ -85,25 +86,27 @@ const transmissionOptions = Object.entries(TransmissionTypeLabels).map(([value, 
   label
 }));
 
-const FormField = ({ children, error, label, className }: { children: React.ReactNode; error?: string; label?: string; className?: string }) => (
-  <div className={`relative ${error ? 'mb-6' : 'mb-3'} ${className || ''}`}>
-    {label && (
-      <div className="text-sm font-medium text-[#3390EC] mb-1 px-1">
-        {label}
-      </div>
-    )}
-    {children}
-    <div className={`absolute -bottom-5 text-[13px] transition-all duration-200 ${
-      error ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
-    }`}>
-      {error && (
-        <div className="text-[#E53935] px-1">
-          {error}
+const FormField = ({ children, error, label, className }: { children: React.ReactNode; error?: string; label?: string; className?: string }) => {
+  return (
+    <div className={`relative ${error ? 'mb-8' : 'mb-2'} ${className || ''}`}>
+      {label && (
+        <div className="text-sm font-medium text-[#3390EC] mb-1 px-1">
+          {label}
         </div>
       )}
+      {children}
+      <div className={`absolute -bottom-6 left-0 right-0 text-[13px] transition-all duration-200 ${
+        error ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
+      }`}>
+        {error && (
+          <div className="text-[#E53935] px-1">
+            {error}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const formatDate = (value: string): string => {
   const numbers = value.replace(/\D/g, '');
@@ -116,6 +119,34 @@ const formatDate = (value: string): string => {
 interface FormErrors extends Partial<Record<keyof CarFormData, string>> {
   submit?: string;
 }
+
+// Добавим функцию для проверки и обработки изображений
+const processImageFile = (file: File): Promise<boolean> => {
+  return new Promise((resolve) => {
+    // Проверяем тип файла
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      resolve(false);
+      return;
+    }
+
+    // Создаем объект изображения для проверки
+    const img = document.createElement('img');
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(true);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(false);
+    };
+
+    img.src = objectUrl;
+  });
+};
 
 export default function CreatePage() {
   const router = useRouter();
@@ -157,7 +188,7 @@ export default function CreatePage() {
       case 'model':
         return !value ? 'Укажите модель автомобиля' : undefined;
       case 'registrationNumber':
-        return !value.match(/^[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$/) ? 'Неверный формат. Используйте только русские буквы' : undefined;
+        return !value.match(/^[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$/) ? 'Неверный формат номера' : undefined;
       case 'vinNumber':
         return !value.match(/^[A-HJ-NPR-Z0-9]{17}$/) ? 'VIN должен содержать 17 символов' : undefined;
       case 'year':
@@ -441,697 +472,725 @@ export default function CreatePage() {
 
   return (
     <Page>
-      <Header />
-      <List className="mt-[30px] px-0">
-        <Section header="Добавление нового автомобиля" className="px-0 mb-2">
-          <div className="px-3">
-            <FormField error={errors.brand} label="Марка" className="mx-2">
-              <Input
-                type="text"
-                value={formData.brand}
-                onChange={(e) => handleInputChange('brand', e.target.value)}
-                onBlur={() => handleBlur('brand')}
-                required
-                status={errors.brand ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.brand
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите марку автомобиля"
-              />
-            </FormField>
-
-            <FormField error={errors.model} label="Модель" className="mx-2">
-              <Input
-                type="text"
-                value={formData.model}
-                onChange={(e) => handleInputChange('model', e.target.value)}
-                onBlur={() => handleBlur('model')}
-                required
-                status={errors.model ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.model
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите модель автомобиля"
-              />
-            </FormField>
-
-            <FormField error={errors.registrationNumber} label="Гос. номер" className="mx-2">
-              <Input
-                type="text"
-                value={formData.registrationNumber}
-                onChange={(e) => handleInputChange('registrationNumber', e.target.value.toUpperCase())}
-                onBlur={() => handleBlur('registrationNumber')}
-                required
-                status={errors.registrationNumber ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.registrationNumber
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите государственный номер"
-              />
-            </FormField>
-
-            <FormField error={errors.vinNumber} label="VIN номер" className="mx-2">
-              <Input
-                type="text"
-                value={formData.vinNumber}
-                onChange={(e) => handleInputChange('vinNumber', e.target.value.toUpperCase())}
-                onBlur={() => handleBlur('vinNumber')}
-                required
-                status={errors.vinNumber ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.vinNumber
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите VIN номер"
-              />
-            </FormField>
-
-            <FormField error={errors.transmissionType} label="Тип трансмиссии" className="mx-2">
-              <Select
-                value={formData.transmissionType}
-                onChange={(e) => {
-                  setFormData({ ...formData, transmissionType: e.target.value as TransmissionType });
-                  handleInputChange('transmissionType', e.target.value);
-                }}
-                onBlur={() => handleBlur('transmissionType')}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.transmissionType
-                    ? 'border-[#E53935] border-[3px] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                  h-[52px]
-                  pl-1
-                `}
-              >
-                <option value="">Выберите тип трансмиссии</option>
-                {Object.entries(TransmissionTypeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </Select>
-            </FormField>
-
-            <FormField error={errors.restrictionType} label="Тип ограничения" className="mx-2">
-              <Select
-                value={formData.restrictionType}
-                onChange={(e) => {
-                  setFormData({ ...formData, restrictionType: e.target.value as RestrictionType });
-                  handleInputChange('restrictionType', e.target.value);
-                }}
-                onBlur={() => handleBlur('restrictionType')}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.restrictionType
-                    ? 'border-[#E53935] border-[3px] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                  h-[52px]
-                  pl-1
-                `}
-              >
-                <option value="">Выберите тип ограничения</option>
-                {Object.entries(RestrictionTypeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </Select>
-            </FormField>
-
-            <FormField error={errors.currentPrice} label="Текущая цена" className="mx-2">
-              <Input
-                type="number"
-                value={formData.currentPrice}
-                onChange={(e) => handleInputChange('currentPrice', e.target.value)}
-                onBlur={() => handleBlur('currentPrice')}
-                required
-                status={errors.currentPrice ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.currentPrice
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите текущую цену"
-              />
-            </FormField>
-
-            <FormField error={errors.year} label="Год производства" className="mx-2">
-              <Input
-                type="number"
-                value={formData.year}
-                onChange={(e) => handleInputChange('year', e.target.value)}
-                onBlur={() => handleBlur('year')}
-                required
-                status={errors.year ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.year
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите год производства"
-              />
-            </FormField>
-
-            <FormField error={errors.enginePower} label="Мощность двигателя (л.с.)" className="mx-2">
-              <Input
-                type="number"
-                value={formData.enginePower}
-                onChange={(e) => handleInputChange('enginePower', e.target.value)}
-                onBlur={() => handleBlur('enginePower')}
-                required
-                status={errors.enginePower ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.enginePower
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите мощность двигателя"
-              />
-            </FormField>
-
-            <FormField error={errors.engineVolume} label="Объем двигателя (л)" className="mx-2">
-              <Input
-                type="number"
-                step="0.1"
-                min="0"
-                max="99.9"
-                value={formData.engineVolume}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // Ограничиваем ввод до одного знака после запятой
-                  const formatted = value.includes('.')
-                    ? value.split('.')[0] + '.' + value.split('.')[1].slice(0, 1)
-                    : value;
-                  handleInputChange('engineVolume', formatted);
-                }}
-                onBlur={() => handleBlur('engineVolume')}
-                required
-                status={errors.engineVolume ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.engineVolume
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-
-              />
-            </FormField>
-
-            <FormField error={errors.ownerCount} label="Количество владельцев" className="mx-2">
-              <Input
-                type="number"
-                value={formData.ownerCount}
-                onChange={(e) => handleInputChange('ownerCount', e.target.value)}
-                onBlur={() => handleBlur('ownerCount')}
-                required
-                status={errors.ownerCount ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.ownerCount
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите количество владельцев"
-              />
-            </FormField>
-
-            <FormField error={errors.retailPrice} label="Средняя цена по рынку" className="mx-2">
-              <Input
-                type="number"
-                value={formData.retailPrice}
-                onChange={(e) => handleInputChange('retailPrice', e.target.value)}
-                onBlur={() => handleBlur('retailPrice')}
-                required
-                status={errors.retailPrice ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.retailPrice
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите среднюю цену по рынку"
-              />
-            </FormField>
-
-            <FormField error={errors.minimalPrice} label="Минимальная цена" className="mx-2">
-              <Input
-                type="number"
-                value={formData.minimalPrice}
-                onChange={(e) => handleInputChange('minimalPrice', e.target.value)}
-                onBlur={() => handleBlur('minimalPrice')}
-                required
-                status={errors.minimalPrice ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.minimalPrice
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите минимальную цену"
-              />
-            </FormField>
-
-            <FormField error={errors.bitDate} label="Дата выкупа (ДД.ММ.ГГГГ)" className="mx-2">
-              <Input
-                type="text"
-                value={formData.bitDate}
-                onChange={(e) => {
-                  const formatted = formatDate(e.target.value);
-                  if (formatted.length <= 10) {
-                    handleInputChange('bitDate', formatted);
-                  }
-                }}
-                onBlur={() => handleBlur('bitDate')}
-                required
-                status={errors.bitDate ? 'error' : 'default'}
-                className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
-                  ${errors.bitDate
-                    ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                    : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                  }
-                  focus:bg-[var(--tg-theme-bg-color)]
-                  text-[var(--tg-theme-text-color)]
-                  placeholder-[var(--tg-theme-hint-color)]
-                  text-[15px]
-                `}
-                placeholder="Введите дату выкупа"
-              />
-            </FormField>
-          </div>
-        </Section>
-
-        <Section header={
-          <div className="flex justify-between items-center w-full px-3">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-[#3390EC] mb-2">Фотографии автомобиля</span>
-              <span className="text-[13px] text-gray-500">
-                Поддерживаются JPEG, PNG, WebP, GIF. Максимум 10 фото по 10MB каждое
-              </span>
+      <div> {/* Add padding bottom for footer */}
+        <List>
+          <Section>
+            <div className="flex items-center justify-center mb-6 pt-4">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-[#3390EC] to-[#5CA5E8] bg-clip-text text-transparent">
+                Добавление нового автомобиля
+              </h1>
             </div>
-            <span className="text-sm text-gray-500">{formData.photos.length}/10</span>
-          </div>
-        } className="px-0">
-          <div className="px-3">
-            <FormField error={errors.photos}>
-              <div className="min-h-[100px] flex flex-col items-center" style={{ paddingTop: '20px' }}>
-                {formData.photos.length > 0 && (
-                  <div className="mb-4 grid grid-cols-4 gap-2 w-full">
-                    {Array.from(formData.photos).map((file, index) => (
-                      <div key={index} className="relative aspect-square w-[120px] h-[120px]">
-                        <Image
-                          src={URL.createObjectURL(file)}
-                          alt={`Photo ${index + 1}`}
-                          width={96}
-                          height={96}
-                          className="w-full h-full object-cover rounded"
-                          style={{ objectFit: 'cover' }}
-                          unoptimized
+            <div className="px-3">
+              <FormField error={errors.brand} label="Марка" className="mx-2">
+                <Input
+                  type="text"
+                  value={formData.brand}
+                  onChange={(e) => handleInputChange('brand', e.target.value)}
+                  onBlur={() => handleBlur('brand')}
+                  required
+                  status={errors.brand ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.brand
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите марку автомобиля"
+                />
+              </FormField>
+
+              <FormField error={errors.model} label="Модель" className="mx-2">
+                <Input
+                  type="text"
+                  value={formData.model}
+                  onChange={(e) => handleInputChange('model', e.target.value)}
+                  onBlur={() => handleBlur('model')}
+                  required
+                  status={errors.model ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.model
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите модель автомобиля"
+                />
+              </FormField>
+
+              <FormField error={errors.registrationNumber} label="Гос. номер" className="mx-2">
+                <Input
+                  type="text"
+                  value={formData.registrationNumber}
+                  onChange={(e) => handleInputChange('registrationNumber', e.target.value.toUpperCase())}
+                  onBlur={() => handleBlur('registrationNumber')}
+                  required
+                  status={errors.registrationNumber ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.registrationNumber
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите государственный номер"
+                />
+              </FormField>
+
+              <FormField error={errors.vinNumber} label="VIN номер" className="mx-2">
+                <Input
+                  type="text"
+                  value={formData.vinNumber}
+                  onChange={(e) => handleInputChange('vinNumber', e.target.value.toUpperCase())}
+                  onBlur={() => handleBlur('vinNumber')}
+                  required
+                  status={errors.vinNumber ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.vinNumber
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите VIN номер"
+                />
+              </FormField>
+
+              <FormField error={errors.transmissionType} label="Тип трансмиссии" className="mx-2">
+                <Select
+                  value={formData.transmissionType}
+                  onChange={(e) => {
+                    setFormData({ ...formData, transmissionType: e.target.value as TransmissionType });
+                    handleInputChange('transmissionType', e.target.value);
+                  }}
+                  onBlur={() => handleBlur('transmissionType')}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.transmissionType
+                      ? 'border-[#E53935] border-[3px] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                    h-[52px]
+                    pl-1
+                  `}
+                >
+                  <option value="">Выберите тип трансмиссии</option>
+                  {Object.entries(TransmissionTypeLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </Select>
+              </FormField>
+
+              <FormField error={errors.restrictionType} label="Тип ограничения" className="mx-2">
+                <Select
+                  value={formData.restrictionType}
+                  onChange={(e) => {
+                    setFormData({ ...formData, restrictionType: e.target.value as RestrictionType });
+                    handleInputChange('restrictionType', e.target.value);
+                  }}
+                  onBlur={() => handleBlur('restrictionType')}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.restrictionType
+                      ? 'border-[#E53935] border-[3px] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                    h-[52px]
+                    pl-1
+                  `}
+                >
+                  <option value="">Выберите тип ограничения</option>
+                  {Object.entries(RestrictionTypeLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </Select>
+              </FormField>
+
+              <FormField error={errors.currentPrice} label="Текущая цена" className="mx-2">
+                <Input
+                  type="number"
+                  value={formData.currentPrice}
+                  onChange={(e) => handleInputChange('currentPrice', e.target.value)}
+                  onBlur={() => handleBlur('currentPrice')}
+                  required
+                  status={errors.currentPrice ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.currentPrice
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите текущую цену"
+                />
+              </FormField>
+
+              <FormField error={errors.year} label="Год производства" className="mx-2">
+                <Input
+                  type="number"
+                  value={formData.year}
+                  onChange={(e) => handleInputChange('year', e.target.value)}
+                  onBlur={() => handleBlur('year')}
+                  required
+                  status={errors.year ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.year
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите год производства"
+                />
+              </FormField>
+
+              <FormField error={errors.enginePower} label="Мощность двигателя (л.с.)" className="mx-2">
+                <Input
+                  type="number"
+                  value={formData.enginePower}
+                  onChange={(e) => handleInputChange('enginePower', e.target.value)}
+                  onBlur={() => handleBlur('enginePower')}
+                  required
+                  status={errors.enginePower ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.enginePower
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите мощность двигателя"
+                />
+              </FormField>
+
+              <FormField error={errors.engineVolume} label="Объем двигателя (л)" className="mx-2">
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="99.9"
+                  value={formData.engineVolume}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Ограничиваем ввод до одного знака после запятой
+                    const formatted = value.includes('.')
+                      ? value.split('.')[0] + '.' + value.split('.')[1].slice(0, 1)
+                      : value;
+                    handleInputChange('engineVolume', formatted);
+                  }}
+                  onBlur={() => handleBlur('engineVolume')}
+                  required
+                  status={errors.engineVolume ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.engineVolume
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+
+                />
+              </FormField>
+
+              <FormField error={errors.ownerCount} label="Количество владельцев" className="mx-2">
+                <Input
+                  type="number"
+                  value={formData.ownerCount}
+                  onChange={(e) => handleInputChange('ownerCount', e.target.value)}
+                  onBlur={() => handleBlur('ownerCount')}
+                  required
+                  status={errors.ownerCount ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.ownerCount
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите количество владельцев"
+                />
+              </FormField>
+
+              <FormField error={errors.retailPrice} label="Средняя цена по рынку" className="mx-2">
+                <Input
+                  type="number"
+                  value={formData.retailPrice}
+                  onChange={(e) => handleInputChange('retailPrice', e.target.value)}
+                  onBlur={() => handleBlur('retailPrice')}
+                  required
+                  status={errors.retailPrice ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.retailPrice
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите среднюю цену по рынку"
+                />
+              </FormField>
+
+              <FormField error={errors.minimalPrice} label="Минимальная цена" className="mx-2">
+                <Input
+                  type="number"
+                  value={formData.minimalPrice}
+                  onChange={(e) => handleInputChange('minimalPrice', e.target.value)}
+                  onBlur={() => handleBlur('minimalPrice')}
+                  required
+                  status={errors.minimalPrice ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.minimalPrice
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите минимальную цену"
+                />
+              </FormField>
+
+              <FormField error={errors.bitDate} label="Дата выкупа (ДД.ММ.ГГГГ)" className="mx-2">
+                <Input
+                  type="text"
+                  value={formData.bitDate}
+                  onChange={(e) => {
+                    const formatted = formatDate(e.target.value);
+                    if (formatted.length <= 10) {
+                      handleInputChange('bitDate', formatted);
+                    }
+                  }}
+                  onBlur={() => handleBlur('bitDate')}
+                  required
+                  status={errors.bitDate ? 'error' : 'default'}
+                  className={`w-full px-4 py-3.5 border-2 rounded-2xl outline-none transition-all duration-200
+                    ${errors.bitDate
+                      ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                      : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                    }
+                    focus:bg-[var(--tg-theme-bg-color)]
+                    text-[var(--tg-theme-text-color)]
+                    placeholder-[var(--tg-theme-hint-color)]
+                    text-[15px]
+                  `}
+                  placeholder="Введите дату выкупа"
+                />
+              </FormField>
+            </div>
+          </Section>
+
+          <Section header={
+            <div className="flex justify-between items-center w-full px-3">
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-[#3390EC] mb-2">Фотографии автомобиля</span>
+                <span className="text-[13px] text-gray-500">
+                  Поддерживаются JPEG, PNG, WebP, GIF. Максимум 10 фото по 10MB каждое
+                </span>
+              </div>
+              <span className="text-sm text-gray-500">{formData.photos.length}/10</span>
+            </div>
+          } className="px-0">
+            <div className="px-3">
+              <FormField error={errors.photos}>
+                <div className={`flex flex-col items-center ${formData.photos.length > 0 ? 'min-h-[100px]' : 'min-h-[60px]'}`}>
+                  {formData.photos.length > 0 && (
+                    <div className="mb-4 grid grid-cols-3 gap-2 w-full">
+                      {Array.from(formData.photos).map((file, index) => (
+                        <div key={index} className="relative aspect-square w-[100px] h-[100px]">
+                          <Image
+                            src={URL.createObjectURL(file)}
+                            alt={`Photo ${index + 1}`}
+                            fill
+                            className="object-cover rounded-lg"
+                            unoptimized
+                          />
+                          <button
+                            onClick={() => {
+                              const newPhotos = Array.from(formData.photos);
+                              newPhotos.splice(index, 1);
+                              setFormData({ ...formData, photos: newPhotos });
+                              setErrors({
+                                ...errors,
+                                photos: newPhotos.length >= 10 ? 'Достигнут лимит в 10 фотографий' : undefined
+                              });
+                            }}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {formData.photos.length < 10 && (
+                    <div className={`${formData.photos.length > 0 ? 'mb-6' : 'mb-2'}`}>
+                      <FileInput
+                        accept="image/*"
+                        multiple
+                        label="Выбрать фото"
+                        onChange={async (e) => {
+                          try {
+                            const files = Array.from(e.target.files || []);
+
+                            // Проверяем общее количество файлов
+                            if (files.length + formData.photos.length > 10) {
+                              setErrors({
+                                ...errors,
+                                photos: 'Достигнут лимит в 10 фотографий'
+                              });
+                              return;
+                            }
+
+                            // Проверяем размер каждого файла
+                            const oversizedFiles = files.filter(file => file.size > 10 * 1024 * 1024);
+                            if (oversizedFiles.length > 0) {
+                              setErrors({
+                                ...errors,
+                                photos: 'Размер каждого файла не должен превышать 10MB'
+                              });
+                              return;
+                            }
+
+                            // Проверяем каждый файл
+                            const validationPromises = files.map(processImageFile);
+                            const validationResults = await Promise.all(validationPromises);
+
+                            const validFiles = files.filter((_, index) => validationResults[index]);
+
+                            if (validFiles.length !== files.length) {
+                              setErrors({
+                                ...errors,
+                                photos: 'Некоторые файлы не являются допустимыми изображениями'
+                              });
+                              // Добавляем только валидные файлы
+                              if (validFiles.length > 0) {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  photos: [...prev.photos, ...validFiles]
+                                }));
+                              }
+                              return;
+                            }
+
+                            // Все файлы прошли проверку
+                            setFormData(prev => ({
+                              ...prev,
+                              photos: [...prev.photos, ...validFiles]
+                            }));
+
+                            if (errors.photos) {
+                              setErrors(prev => ({ ...prev, photos: undefined }));
+                            }
+                          } catch (error) {
+                            console.error('Error processing files:', error);
+                            setErrors(prev => ({
+                              ...prev,
+                              photos: 'Ошибка при обработке файлов'
+                            }));
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </FormField>
+            </div>
+          </Section>
+
+          <Section header={
+            <div className="flex justify-between items-center w-full px-3">
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-[#3390EC] mb-2">Документы</span>
+                <span className="text-[13px] text-gray-500">PDF, DOC или DOCX, максимум 5 файлов</span>
+              </div>
+              <span className="text-sm text-gray-500">{formData.documents.length}/5</span>
+            </div>
+          } className="px-0">
+            <div className="px-3">
+              <FormField error={errors.documents}>
+                <div className={`flex flex-col items-center ${formData.documents.length > 0 ? 'min-h-[100px]' : 'min-h-[60px]'}`}>
+                  {formData.documents.length > 0 && (
+                    <div className="mb-4 space-y-2 w-full">
+                      {Array.from(formData.documents).map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 rounded border border-[#3390EC]/30">
+                          <span className="text-sm truncate text-[var(--tg-theme-text-color)]">{file.name}</span>
+                          <button
+                            onClick={() => {
+                              const newDocs = Array.from(formData.documents);
+                              newDocs.splice(index, 1);
+                              setFormData({ ...formData, documents: newDocs });
+                              setErrors({
+                                ...errors,
+                                documents: newDocs.length >= 5 ? 'Достигнут лимит в 5 документов' : undefined
+                              });
+                            }}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {formData.documents.length < 5 && (
+                    <div className={`${formData.documents.length > 0 ? 'mb-6' : 'mb-2'}`}>
+                      <FileInput
+                        accept="application/pdf"
+                        multiple
+                        label="Выбрать документ"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          const docFiles = files.filter(file => file.type === 'application/pdf');
+                          if (docFiles.length + formData.documents.length > 5) {
+                            setErrors({
+                              ...errors,
+                              documents: 'Достигнут лимит в 5 документов'
+                            });
+                            return;
+                          }
+                          setFormData({ ...formData, documents: [...formData.documents, ...docFiles] });
+                          // Очищаем ошибку, если документы были добавлены
+                          if (errors.documents && formData.documents.length + docFiles.length > 0) {
+                            setErrors({ ...errors, documents: undefined });
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </FormField>
+            </div>
+          </Section>
+
+          <Section header="Дополнительная информация" className="px-0 bg-transparent">
+            <div className="px-3">
+              <div className="space-y-2">
+                {formData.additionalInfo.map((info, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <div className="text-sm text-[#3390EC] mb-1 px-2">{`Пункт ${index + 1}`}</div>
+                      <div className="flex gap-2">
+                        <textarea
+                          value={info}
+                          onChange={(e) => {
+                            const newInfo = [...formData.additionalInfo];
+                            newInfo[index] = e.target.value;
+                            setFormData({ ...formData, additionalInfo: newInfo });
+                          }}
+                          className={`w-full min-h-[80px] px-4 py-3.5 border-2 rounded-2xl resize-none outline-none transition-all duration-200
+                            ${errors.additionalInfo
+                              ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                              : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                            }
+                            focus:bg-[var(--tg-theme-bg-color)]
+                            text-[var(--tg-theme-text-color)]
+                            placeholder-[var(--tg-theme-hint-color)]
+                            text-[15px]
+                          `}
                         />
-                        <button
+                        <Button
                           onClick={() => {
-                            const newPhotos = Array.from(formData.photos);
-                            newPhotos.splice(index, 1);
-                            setFormData({ ...formData, photos: newPhotos });
-                            setErrors({
-                              ...errors,
-                              photos: newPhotos.length >= 10 ? 'Достигнут лимит в 10 фотографий' : undefined
-                            });
+                            const newInfo = [...formData.additionalInfo];
+                            newInfo.splice(index, 1);
+                            setFormData({ ...formData, additionalInfo: newInfo });
                           }}
-                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm"
+                          className="bg-red-500 text-white w-[32px] h-[80px] flex items-center justify-center"
                         >
-                          ×
-                        </button>
+                          <FaTrash size={14} />
+                        </Button>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                )}
-                {formData.photos.length < 10 && (
-                  <div className="mb-6">
-                    <FileInput
-                      accept="image/*"
-                      multiple
-                      label="Выбрать фото"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        const imageFiles = files.filter(file => {
-                          // Проверяем, что файл действительно изображение
-                          const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-                          return validTypes.includes(file.type);
+                ))}
+                {formData.additionalInfo.length < 10 && (
+                  <Button
+                    onClick={() => {
+                      if (formData.additionalInfo.length < 10) {
+                        setFormData({
+                          ...formData,
+                          additionalInfo: [...formData.additionalInfo, '']
                         });
-
-                        if (imageFiles.length !== files.length) {
-                          setErrors({
-                            ...errors,
-                            photos: 'Допустимы только файлы изображений (JPEG, PNG, WebP, GIF)'
-                          });
-                          return;
-                        }
-
-                        if (imageFiles.length + formData.photos.length > 10) {
-                          setErrors({
-                            ...errors,
-                            photos: 'Достигнут лимит в 10 фотографий'
-                          });
-                          return;
-                        }
-
-                        // Проверяем размер каждого файла (максимум 10MB)
-                        const oversizedFiles = imageFiles.filter(file => file.size > 10 * 1024 * 1024);
-                        if (oversizedFiles.length > 0) {
-                          setErrors({
-                            ...errors,
-                            photos: 'Размер каждого файла не должен превышать 10MB'
-                          });
-                          return;
-                        }
-
-                        setFormData({ ...formData, photos: [...formData.photos, ...imageFiles] });
-                        if (errors.photos && formData.photos.length + imageFiles.length > 0) {
-                          setErrors({ ...errors, photos: undefined });
-                        }
-                      }}
-                    />
+                      }
+                    }}
+                    className="w-full px-4 py-3.5 rounded-2xl transition-all duration-200 bg-[var(--tg-theme-bg-color)] text-[#3390EC] font-medium text-[15px] text-center border border-[#3390EC] flex items-center justify-center gap-2 group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 transition-transform group-hover:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      <span>Добавить информацию</span>
+                    </div>
+                  </Button>
+                )}
+                {formData.additionalInfo.length >= 10 && (
+                  <div className="text-sm text-red-500">
+                    Достигнут лимит в 10 пунктов
                   </div>
                 )}
               </div>
-            </FormField>
-          </div>
-        </Section>
-
-        <Section header={
-          <div className="flex justify-between items-center w-full px-3">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-[#3390EC] mb-2">Документы</span>
-              <span className="text-[13px] text-gray-500">PDF, DOC или DOCX, максимум 5 файлов</span>
             </div>
-            <span className="text-sm text-gray-500">{formData.documents.length}/5</span>
-          </div>
-        } className="px-0">
-          <div className="px-3">
-            <FormField error={errors.documents}>
-              <div className="min-h-[100px] flex flex-col items-center" style={{ paddingTop: '20px' }}>
-                {formData.documents.length > 0 && (
-                  <div className="mb-4 space-y-2 w-full">
-                    {Array.from(formData.documents).map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 rounded border border-[#3390EC]/30">
-                        <span className="text-sm truncate text-[var(--tg-theme-text-color)]">{file.name}</span>
-                        <button
-                          onClick={() => {
-                            const newDocs = Array.from(formData.documents);
-                            newDocs.splice(index, 1);
-                            setFormData({ ...formData, documents: newDocs });
-                            setErrors({
-                              ...errors,
-                              documents: newDocs.length >= 5 ? 'Достигнут лимит в 5 документов' : undefined
-                            });
+          </Section>
+
+          <Section header="Нюансы и возможные проблемы" className="px-0 bg-transparent">
+            <div className="px-3">
+              <div className="space-y-2">
+                {formData.problemInfo.map((info, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <div className="text-sm text-[#3390EC] mb-1 px-2">{`Пункт ${index + 1}`}</div>
+                      <div className="flex gap-2">
+                        <textarea
+                          value={info}
+                          onChange={(e) => {
+                            const newInfo = [...formData.problemInfo];
+                            newInfo[index] = e.target.value;
+                            setFormData({ ...formData, problemInfo: newInfo });
                           }}
-                          className="ml-2 text-red-500 hover:text-red-700"
+                          className={`w-full min-h-[80px] px-4 py-3.5 border-2 rounded-2xl resize-none outline-none transition-all duration-200
+                            ${errors.problemInfo
+                              ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
+                              : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
+                            }
+                            focus:bg-[var(--tg-theme-bg-color)]
+                            text-[var(--tg-theme-text-color)]
+                            placeholder-[var(--tg-theme-hint-color)]
+                            text-[15px]
+                          `}
+                        />
+                        <Button
+                          onClick={() => {
+                            const newInfo = [...formData.problemInfo];
+                            newInfo.splice(index, 1);
+                            setFormData({ ...formData, problemInfo: newInfo });
+                          }}
+                          className="bg-red-500 text-white w-[32px] h-[80px] flex items-center justify-center"
                         >
-                          Удалить
-                        </button>
+                          <FaTrash size={14} />
+                        </Button>
                       </div>
-                    ))}
+                    </div>
                   </div>
+                ))}
+                {formData.problemInfo.length < 10 && (
+                  <Button
+                    onClick={() => {
+                      if (formData.problemInfo.length < 10) {
+                        setFormData({
+                          ...formData,
+                          problemInfo: [...formData.problemInfo, '']
+                        });
+                      }
+                    }}
+                    className="w-full px-4 py-3.5 rounded-2xl transition-all duration-200 bg-[var(--tg-theme-bg-color)] text-[#3390EC] font-medium text-[15px] text-center border border-[#3390EC] flex items-center justify-center gap-2 group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 transition-transform group-hover:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      <span className="text-[#3390EC]">Добавить нюанс</span>
+                    </div>
+                  </Button>
                 )}
-                {formData.documents.length < 5 && (
-                  <div className="mb-6">
-                    <FileInput
-                      accept="application/pdf"
-                      multiple
-                      label="Выбрать документ"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        const docFiles = files.filter(file => file.type === 'application/pdf');
-                        if (docFiles.length + formData.documents.length > 5) {
-                          setErrors({
-                            ...errors,
-                            documents: 'Достигнут лимит в 5 документов'
-                          });
-                          return;
-                        }
-                        setFormData({ ...formData, documents: [...formData.documents, ...docFiles] });
-                        // Очищаем ошибку, если документы были добавлены
-                        if (errors.documents && formData.documents.length + docFiles.length > 0) {
-                          setErrors({ ...errors, documents: undefined });
-                        }
-                      }}
-                    />
+                {formData.problemInfo.length >= 10 && (
+                  <div className="text-sm text-red-500">
+                    Достигнут лимит в 10 пунктов
                   </div>
                 )}
               </div>
-            </FormField>
-          </div>
-        </Section>
-
-        <Section header="Дополнительная информация" className="px-0 bg-transparent">
-          <div className="px-3">
-            <div className="space-y-2">
-              {formData.additionalInfo.map((info, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-1">
-                    <div className="text-sm text-[#3390EC] mb-1 px-2">{`Пункт ${index + 1}`}</div>
-                    <div className="flex gap-2">
-                      <textarea
-                        value={info}
-                        onChange={(e) => {
-                          const newInfo = [...formData.additionalInfo];
-                          newInfo[index] = e.target.value;
-                          setFormData({ ...formData, additionalInfo: newInfo });
-                        }}
-                        className={`w-full min-h-[80px] px-4 py-3.5 border-2 rounded-2xl resize-none outline-none transition-all duration-200
-                          ${errors.additionalInfo
-                            ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                            : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                          }
-                          focus:bg-[var(--tg-theme-bg-color)]
-                          text-[var(--tg-theme-text-color)]
-                          placeholder-[var(--tg-theme-hint-color)]
-                          text-[15px]
-                        `}
-                      />
-                      <Button
-                        onClick={() => {
-                          const newInfo = [...formData.additionalInfo];
-                          newInfo.splice(index, 1);
-                          setFormData({ ...formData, additionalInfo: newInfo });
-                        }}
-                        className="bg-red-500 text-white w-[32px] h-[80px] flex items-center justify-center"
-                      >
-                        <FaTrash size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {formData.additionalInfo.length < 10 && (
-                <Button
-                  onClick={() => {
-                    if (formData.additionalInfo.length < 10) {
-                      setFormData({
-                        ...formData,
-                        additionalInfo: [...formData.additionalInfo, '']
-                      });
-                    }
-                  }}
-                  className="w-full px-4 py-3.5 rounded-2xl transition-all duration-200 bg-[var(--tg-theme-bg-color)] text-[#3390EC] font-medium text-[15px] text-center border border-[#3390EC] flex items-center justify-center gap-2 group"
-                >
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 transition-transform group-hover:rotate-180"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    <span>Добавить информацию</span>
-                  </div>
-                </Button>
-              )}
-              {formData.additionalInfo.length >= 10 && (
-                <div className="text-sm text-red-500">
-                  Достигнут лимит в 10 пунктов
-                </div>
-              )}
             </div>
-          </div>
-        </Section>
+          </Section>
 
-        <Section header="Нюансы и возможные проблемы" className="px-0 bg-transparent">
-          <div className="px-3">
-            <div className="space-y-2">
-              {formData.problemInfo.map((info, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-1">
-                    <div className="text-sm text-[#3390EC] mb-1 px-2">{`Пункт ${index + 1}`}</div>
-                    <div className="flex gap-2">
-                      <textarea
-                        value={info}
-                        onChange={(e) => {
-                          const newInfo = [...formData.problemInfo];
-                          newInfo[index] = e.target.value;
-                          setFormData({ ...formData, problemInfo: newInfo });
-                        }}
-                        className={`w-full min-h-[80px] px-4 py-3.5 border-2 rounded-2xl resize-none outline-none transition-all duration-200
-                          ${errors.problemInfo
-                            ? 'border-[#E53935] focus:border-[#E53935] bg-[#E53935]/5'
-                            : 'border-[#3390EC]/30 focus:border-[#3390EC] bg-[var(--tg-theme-secondary-bg-color)]'
-                          }
-                          focus:bg-[var(--tg-theme-bg-color)]
-                          text-[var(--tg-theme-text-color)]
-                          placeholder-[var(--tg-theme-hint-color)]
-                          text-[15px]
-                        `}
-                      />
-                      <Button
-                        onClick={() => {
-                          const newInfo = [...formData.problemInfo];
-                          newInfo.splice(index, 1);
-                          setFormData({ ...formData, problemInfo: newInfo });
-                        }}
-                        className="bg-red-500 text-white w-[32px] h-[80px] flex items-center justify-center"
-                      >
-                        <FaTrash size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {formData.problemInfo.length < 10 && (
-                <Button
-                  onClick={() => {
-                    if (formData.problemInfo.length < 10) {
-                      setFormData({
-                        ...formData,
-                        problemInfo: [...formData.problemInfo, '']
-                      });
-                    }
-                  }}
-                  className="w-full px-4 py-3.5 rounded-2xl transition-all duration-200 bg-[var(--tg-theme-bg-color)] text-[#3390EC] font-medium text-[15px] text-center border border-[#3390EC] flex items-center justify-center gap-2 group"
-                >
-                  <div className="flex items-center gap-2">
-                    <svg
-                      className="w-4 h-4 transition-transform group-hover:rotate-180"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    <span className="text-[#3390EC]">Добавить нюанс</span>
-                  </div>
-                </Button>
-              )}
-              {formData.problemInfo.length >= 10 && (
-                <div className="text-sm text-red-500">
-                  Достигнут лимит в 10 пунктов
-                </div>
-              )}
+          {errors.submit && (
+            <div className="mx-3 px-4 py-3 mb-4 bg-red-50 text-red-500 text-sm rounded-lg">
+              {errors.submit}
             </div>
+          )}
+
+          <div className="flex gap-2.5 mt-5 mx-3 pb-4">
+            <Button
+              onClick={handleSubmit}
+              className="flex-1 bg-[#3390EC] hover:bg-[#3390EC]/90 text-white font-medium"
+            >
+              Сохранить
+            </Button>
+            <Button
+              onClick={handleCancel}
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium"
+              type="secondary"
+            >
+              Отмена
+            </Button>
           </div>
-        </Section>
+        </List>
 
-        {errors.submit && (
-          <div className="mx-3 px-4 py-3 mb-4 bg-red-50 text-red-500 text-sm rounded-lg">
-            {errors.submit}
-          </div>
-        )}
+        <Toast
+          message={message}
+          type={type}
+          isVisible={isVisible}
+          onClose={hideToast}
+        />
+      </div>
 
-        <div className="flex gap-2.5 mt-5 mx-3 pb-4">
-          <Button
-            onClick={handleSubmit}
-            className="flex-1 bg-[#3390EC] hover:bg-[#3390EC]/90 text-white font-medium"
-          >
-            Сохранить
-          </Button>
-          <Button
-            onClick={handleCancel}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium"
-            type="secondary"
-          >
-            Отмена
-          </Button>
-        </div>
-      </List>
-
-      <Toast
-        message={message}
-        type={type}
-        isVisible={isVisible}
-        onClose={hideToast}
-      />
+      <Footer />
     </Page>
   );
 }

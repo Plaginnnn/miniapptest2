@@ -4,4 +4,11 @@
 
 body {
   background: var(--tg-theme-secondary-bg-color, white);
+  overflow-x: hidden;
+  width: 100vw;
+  position: relative;
+}
+
+#__next {
+  overflow-x: hidden;
 }

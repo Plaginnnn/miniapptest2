@@ -1,0 +1,27 @@
+.pagination-custom {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.pagination-custom button {
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 0 8px !important;
+  font-size: 14px !important;
+}
+
+.pagination-custom .MuiPaginationItem-root {
+  margin: 0 3px;
+}
+
+@media (min-width: 768px) {
+  .pagination-custom {
+    gap: 8px;
+  }
+
+  .pagination-custom button {
+    min-width: 40px !important;
+    height: 40px !important;
+  }
+}
